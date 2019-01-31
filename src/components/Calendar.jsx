@@ -1,17 +1,28 @@
 import React from "react";
 import dateFns from "date-fns";
-const data = {
-  10:['aaa'],
-  12:['ddd'],
-  15:['bbb'],
-  20:['ccc'],
-}
+import axios from 'axios';
 class Calendar extends React.Component {
   state = {
     currentMonth: new Date(),
-    selectedDate: new Date()
+    selectedDate: new Date(),
+    availableData:[]
+
   };
 
+  componentDidMount() {
+    axios.get(`http://188.166.34.157/service/jazz/dates`)
+        .then(res => {
+          const availableData = res.data.dates;
+          this.setState({ availableData:availableData});
+        });
+
+
+  }
+  checkDate(date){
+    if(this.state.availableData.includes(date)){
+      return true;
+    }
+  }
   renderHeader() {
     const dateFormat = "MMMM YYYY";
 
@@ -53,10 +64,10 @@ class Calendar extends React.Component {
     this.setState({
       selectedDate: day
     });
-    console.log(serviceAlias, date)
   }
 
   renderCells() {
+    console.log(this.state.availableData)
     const { currentMonth, selectedDate } = this.state;
     const monthStart = dateFns.startOfMonth(currentMonth);
     const monthEnd = dateFns.endOfMonth(monthStart);
@@ -64,6 +75,7 @@ class Calendar extends React.Component {
     const endDate = dateFns.endOfWeek(monthEnd);
 
     const dateFormat = "D";
+    const checkFormat = "DD.MM.YYYY";
     const rows = [];
 
     let days = [];
@@ -73,9 +85,10 @@ class Calendar extends React.Component {
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
         const formattedDate = dateFns.format(day, dateFormat);
+        const formattedCheck = dateFns.format(day, checkFormat);
         const cloneDay = day;
         let activeDay=false;
-        if(data[formattedDate]){
+        if(this.checkDate(formattedCheck)){
           activeDay=true;
         }
         days.push(
@@ -87,7 +100,7 @@ class Calendar extends React.Component {
 
             } ${activeDay ? "" : " disabled"}`}
             key={day}
-            onClick={() => this.getSchedule(data[formattedDate],cloneDay )}
+            onClick={() => this.getSchedule(formattedCheck,cloneDay )}
           >
             <span className="number">{formattedDate}</span>
             <span className="bg">{formattedDate}</span>
